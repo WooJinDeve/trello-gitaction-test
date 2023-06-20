@@ -31,20 +31,26 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
         
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
         with:
-          python-version: '3.x'
+          files: '**/build/test-results/test/TEST-*.xml'
+#           echo "TEST_COUNT=$TEST_COUNT" >> $GITHUB_ENV
+#           echo "FAILED_COUNT=$FAILED_COUNT" >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: python -m pip install --upgrade pip junit-xml
-
-      - name: Extract test results
+      - name: Extract Test Results
+        id: extract-results
         run: |
-          TEST_COUNT=$(python -c "from junit_xml import TestSuite; ts = TestSuite.from_file('build/test-results/test/TEST-*.xml'); print(len(ts.test_cases))")
-          FAILED_COUNT=$(python -c "from junit_xml import TestSuite; ts = TestSuite.from_file('build/test-results/test/TEST-*.xml'); print(len([tc for tc in ts.test_cases if tc.is_failure()]))")
-          echo "TEST_COUNT=$TEST_COUNT" >> $GITHUB_ENV
-          echo "FAILED_COUNT=$FAILED_COUNT" >> $GITHUB_ENV
+          echo "TESTS=${{ fromJSON(steps.test-results.outputs.json).stats.tests }}" >> $GITHUB_ENV
+          echo "SUCCESSFUL_TESTS=${{ fromJSON(steps.test-results.outputs.json).stats.tests_succ }}" >> $GITHUB_ENV
+          echo "FAILED_TESTS=${{ fromJSON(steps.test-results.outputs.json).stats.tests_fail }}" >> $GITHUB_ENV
+
+      - name: Use Extracted Results
+        run: |
+          echo "Tests: ${{ env.TESTS }}"
+          echo "Successful Tests: ${{ env.SUCCESSFUL_TESTS }}"
+          echo "Failed Tests: ${{ env.FAILED_TESTS }}"
           
       - name: Get current time
         id: current_time
@@ -58,7 +64,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
                   "name": "Success",
-                  "desc": "Spring Boot Tests Succeeded: '"$TEST_COUNT"' tests run, '"$FAILED_COUNT"' tests failed. Test run at '"${{ steps.current_time.outputs.current_time }}"'",
+                  "desc": "TEST RESULT, TOTAL TEST : ${{ env.TESTS }}, SUCCESSED : ${{ env.SUCCESSFUL_TESTS }}, FAILED : ${{ env.FAILED_TESTS }}",
                   "idList": "${{ secrets.TRELLO_IDLIST }}",
                   "key": "${{ secrets.TRELLO_KEY }}",
                   "token": "${{ secrets.TRELLO_TOKEN }}"
@@ -71,7 +77,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
                   "name": "Failure",
-                  "desc": "Spring Boot Tests Failed: '"$TEST_COUNT"' tests run, '"$FAILED_COUNT"' tests failed. Test run at '"${{ steps.current_time.outputs.current_time }}"'",
+                  "desc": "TEST RESULT, TOTAL TEST : ${{ env.TESTS }}, SUCCESSED : ${{ env.SUCCESSFUL_TESTS }}, FAILED : ${{ env.FAILED_TESTS }}",
                   "idList": "${{ secrets.TRELLO_IDLIST }}",
                   "key": "${{ secrets.TRELLO_KEY }}",
                   "token": "${{ secrets.TRELLO_TOKEN }}"
