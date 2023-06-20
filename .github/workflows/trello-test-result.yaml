@@ -42,30 +42,32 @@ jobs:
           FAILED_COUNT=$(python -c "from junit_xml import TestSuite; ts = TestSuite.from_file('build/test-results/test/TEST-*.xml'); print(len([tc for tc in ts.test_cases if tc.is_failure()]))")
           echo "TEST_COUNT=$TEST_COUNT" >> $GITHUB_ENV
           echo "FAILED_COUNT=$FAILED_COUNT" >> $GITHUB_ENV
-
+          
       - name: Get current time
         id: current_time
         run: |
           echo "::set-output name=current_time::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
-      - name: Notify Trello if Success
+      - name: Create Trello Card if Success
         if: success()
         run: |
-          curl -X POST https://api.trello.com/1/cards/{cardId}/actions/comments \
+          curl -X POST https://api.trello.com/1/cards \
             -H "Content-Type: application/json" \
             -d '{
-                  "text": "Spring Boot Tests Succeeded: $TEST_COUNT tests run, $FAILED_COUNT tests failed. Test run at ${{ steps.current_time.outputs.current_time }}",
+                  "name": "Spring Boot Tests Succeeded: $TEST_COUNT tests run, $FAILED_COUNT tests failed. Test run at ${{ steps.current_time.outputs.current_time }}",
+                  "idList": "${{ secrets.TRELLO_IDLIST }}",
                   "key": "${{ secrets.TRELLO_KEY }}",
                   "token": "${{ secrets.TRELLO_TOKEN }}"
                 }'
-
-      - name: Notify Trello if Failure
+                
+      - name: Create Trello Card if Failure
         if: failure()
         run: |
-          curl -X POST https://api.trello.com/1/cards/{cardId}/actions/comments \
+          curl -X POST https://api.trello.com/1/cards \
             -H "Content-Type: application/json" \
             -d '{
-                  "text": "Spring Boot Tests Failed: $TEST_COUNT tests run, $FAILED_COUNT tests failed. Test run at ${{ steps.current_time.outputs.current_time }}",
+                  "name": "Spring Boot Tests Failed: $TEST_COUNT tests run, $FAILED_COUNT tests failed. Test run at ${{ steps.current_time.outputs.current_time }}",
+                  "idList": "${{ secrets.TRELLO_IDLIST }}",
                   "key": "${{ secrets.TRELLO_KEY }}",
                   "token": "${{ secrets.TRELLO_TOKEN }}"
                 }'
