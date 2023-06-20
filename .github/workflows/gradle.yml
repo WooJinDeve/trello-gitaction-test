@@ -1,4 +1,4 @@
-name: Manual Spring Boot Test and Notify Trello
+name: TEST 
 
 on:
   workflow_dispatch:
@@ -39,6 +39,9 @@ jobs:
           files: '**/build/test-results/test/TEST-*.xml'
 
 
+      - name: Conclusion
+        run: echo "Conclusion is ${{ fromJSON( steps.test-results.outputs.json ).conclusion }}"
+    
       - name: Extract Test Results
         id: extract-results
         run: |
