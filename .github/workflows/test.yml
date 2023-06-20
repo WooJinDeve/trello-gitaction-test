@@ -42,6 +42,6 @@ jobs:
         shell: bash
         id: extract-results
         run: |
-          echo "TESTS=${{ fromJSON(steps.test-results.outputs.json).formatted.stats.tests }}" >> $GITHUB_ENV
-          echo "SUCCESSFUL_TESTS=${{ fromJSON( steps.test-results.outputs.json).formatted.stats.tests_succ }}" >> $GITHUB_ENV
-          echo "FAILED_TESTS=${{ fromJSON(steps.test-results.outputs.json).formatted.stats.tests_fail }}" >> $GITHUB_ENV
+          echo "TESTS=${{ steps.test-results.outputs.json.formatted.stats.tests }}" >> $GITHUB_ENV
+          echo "SUCCESSFUL_TESTS=${{  steps.test-results.outputs.json.formatted.stats.tests_succ }}" >> $GITHUB_ENV
+          echo "FAILED_TESTS=${{ steps.test-results.outputs.json.formatted.stats.tests_fail }}" >> $GITHUB_ENV
