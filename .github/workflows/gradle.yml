@@ -1,0 +1,48 @@
+name: Manual Spring Boot Test and Notify Trello
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-and-notify:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: 17
+          distribution: 'temurin'  # Eclipse Temurin distribution
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build
+        
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: '**/build/test-results/test/TEST-*.xml'
+
+
+      - name: Extract Test Results
+        id: extract-results
+        run: |
+          echo "TESTS=${{ steps.test-results.outputs.json.stats.tests }}" 
+          echo "SUCCESSFUL_TESTS=${{ steps.test-results.outputs.json.stats.tests_succ }}" 
+          echo "FAILED_TESTS=${{ steps.test-results.outputs.json.stats.tests_fail }}" 
+          
