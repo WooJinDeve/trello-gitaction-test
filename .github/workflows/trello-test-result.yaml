@@ -75,6 +75,7 @@ jobs:
                   "desc": "TEST RESULT, TOTAL TEST : ${{ env.TESTS }}, SUCCESSED : ${{ env.SUCCESSFUL_TESTS }}, FAILED : ${{ env.FAILED_TESTS }}",
                   "idList": "${{ secrets.TRELLO_IDLIST }}",
                   "key": "${{ secrets.TRELLO_KEY }}",
+                  "idLabels": ["${{ secrets.TRELLO_LABEL_CODE }}", "${{ secrets.TRELLO_LABEL_DE }}", "${{ secrets.TRELLO_LABEL_SUCCESS }}"],
                   "token": "${{ secrets.TRELLO_TOKEN }}"
                 }'
                 
@@ -88,5 +89,6 @@ jobs:
                   "desc": "TEST RESULT, TOTAL TEST : ${{ env.TESTS }}, SUCCESSED : ${{ env.SUCCESSFUL_TESTS }}, FAILED : ${{ env.FAILED_TESTS }}",
                   "idList": "${{ secrets.TRELLO_IDLIST }}",
                   "key": "${{ secrets.TRELLO_KEY }}",
+                  "idLabels": ["${{ secrets.TRELLO_LABEL_CODE }}", "${{ secrets.TRELLO_LABEL_DE }}", "${{ secrets.TRELLO_LABEL_FAILED }}"],
                   "token": "${{ secrets.TRELLO_TOKEN }}"
                   }'
