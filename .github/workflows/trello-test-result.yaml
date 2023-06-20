@@ -1,0 +1,71 @@
+name: Manual Spring Boot Test and Notify Trello
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-and-notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: 17
+          distribution: 'temurin'  # Eclipse Temurin distribution
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Test with Gradle
+        run: ./gradlew test --info --continue  --test-output-format=xml
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip junit-xml
+
+      - name: Extract test results
+        run: |
+          TEST_COUNT=$(python -c "from junit_xml import TestSuite; ts = TestSuite.from_file('build/test-results/test/TEST-*.xml'); print(len(ts.test_cases))")
+          FAILED_COUNT=$(python -c "from junit_xml import TestSuite; ts = TestSuite.from_file('build/test-results/test/TEST-*.xml'); print(len([tc for tc in ts.test_cases if tc.is_failure()]))")
+          echo "TEST_COUNT=$TEST_COUNT" >> $GITHUB_ENV
+          echo "FAILED_COUNT=$FAILED_COUNT" >> $GITHUB_ENV
+
+      - name: Get current time
+        id: current_time
+        run: |
+          echo "::set-output name=current_time::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+      - name: Notify Trello if Success
+        if: success()
+        run: |
+          curl -X POST https://api.trello.com/1/cards/{cardId}/actions/comments \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "text": "Spring Boot Tests Succeeded: $TEST_COUNT tests run, $FAILED_COUNT tests failed. Test run at ${{ steps.current_time.outputs.current_time }}",
+                  "key": "${{ secrets.TRELLO_KEY }}",
+                  "token": "${{ secrets.TRELLO_TOKEN }}"
+                }'
+
+      - name: Notify Trello if Failure
+        if: failure()
+        run: |
+          curl -X POST https://api.trello.com/1/cards/{cardId}/actions/comments \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "text": "Spring Boot Tests Failed: $TEST_COUNT tests run, $FAILED_COUNT tests failed. Test run at ${{ steps.current_time.outputs.current_time }}",
+                  "key": "${{ secrets.TRELLO_KEY }}",
+                  "token": "${{ secrets.TRELLO_TOKEN }}"
+                }'
