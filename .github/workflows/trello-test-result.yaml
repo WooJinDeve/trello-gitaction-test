@@ -6,6 +6,8 @@ on:
 jobs:
   test-and-notify:
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
 
     steps:
       - name: Checkout code
@@ -36,8 +38,6 @@ jobs:
         if: always()
         with:
           files: '**/build/test-results/test/TEST-*.xml'
-#           echo "TEST_COUNT=$TEST_COUNT" >> $GITHUB_ENV
-#           echo "FAILED_COUNT=$FAILED_COUNT" >> $GITHUB_ENV
 
       - name: Extract Test Results
         id: extract-results
