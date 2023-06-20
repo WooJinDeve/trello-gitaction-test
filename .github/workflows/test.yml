@@ -38,13 +38,9 @@ jobs:
         with:
           files: '**/build/test-results/test/TEST-*.xml'
 
-
-      - name: Conclusion
-        run: echo "Conclusion is ${{ fromJSON( steps.test-results.outputs.json ).conclusion }}"
-
       - name: Extract Test Results
         id: extract-results
         run: |
-          echo "TESTS=${{ fromJSON(steps.test-results.outputs.json).stats.tests }}" >> $GITHUB_ENV
-          echo "SUCCESSFUL_TESTS=${{ fromJSON(steps.test-results.outputs.json).stats.tests_succ }}" >> $GITHUB_ENV
-          echo "FAILED_TESTS=${{ fromJSON(steps.test-results.outputs.json).stats.tests_fail }}" >> $GITHUB_ENV
+          echo "TESTS=${{ fromJSON(steps.test-results.outputs.json).conclusion.stats.tests }}" >> $GITHUB_ENV
+          echo "SUCCESSFUL_TESTS=${{ fromJSON(steps.test-results.outputs.json).conclusion.stats.tests_succ }}" >> $GITHUB_ENV
+          echo "FAILED_TESTS=${{ fromJSON(steps.test-results.outputs.json).conclusion.stats.tests_fail }}" >> $GITHUB_ENV
